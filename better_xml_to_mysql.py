@@ -2,21 +2,26 @@ import mysql.connector
 import xml.etree.ElementTree as ET
 from mysql.connector import errorcode
 
-
+# ***************loading Xml file*****************
 tree = ET.parse('books.xml')
 root = tree.getroot()
 
-id_by = '<'+str(root[0].tag)+'>'
-print(id_by)
+# ***************table name*****************
 table_name = root.tag
 
+
+# **************attribute from XML
 art_list = list(root[0].attrib.keys())
+
+# **********************list of table name followed by coloumn name from Xml
 col = [table_name]
 for i in art_list:
     col.append(i)
 for elem in root[0]:
     col.append(elem.tag)
 
+
+# ******************making create table query
 new_query = "CREATE TABLE {0} ("
 add_query = "} VARCHAR(255) "
 for i in range(1, len(col)):
@@ -29,11 +34,14 @@ new_query += ")"
 
 new_query = new_query.format(*col)
 
+
+# *********************connecting database************************
 db = mysql.connector.connect(
     host="localhost", user="root", password="1234", database="catalog")
 
 my_cursor = db.cursor()
 
+# ********************creating table********************************
 try:
     my_cursor.execute(new_query)
 except mysql.connector.Error as err:
@@ -45,20 +53,20 @@ else:
     print("ok")
 
 
-"INSERT INTO {} ({}, {}, {}, {}, {}, {}, {} ) VALUES (%s, %s, %s, %s, %s, %s, %s)".format(
-    table_name, col[0], col[1], col[2], col[3], col[4], col[5], col[6])
-
-
+# ******************geting the row values from xml*****************
 list_of_value = []
 value_tuple = []
-a = str(list(root[0].attrib.keys())[0])
 for elem in root:
     value_tuple = []
-    value_tuple.append(str(elem.attrib[a]))
+
+    for a in art_list:
+        value_tuple.append(str(elem.attrib[a]))
     for subelem in elem:
         value_tuple.append(str(subelem.text))
     list_of_value.append(tuple(value_tuple))
 
+
+# *******************Making insert query*******************
 new_query = "INSERT INTO {0} ("
 add_query = "}"
 for i in range(1, len(col)):
@@ -75,6 +83,7 @@ for i in range(1, len(col)):
 new_query += ")"
 new_query = new_query.format(*col)
 
+# ***********************inserting the rows********************
 try:
     my_cursor.executemany(new_query, list_of_value)
     db.commit()
