@@ -1,13 +1,13 @@
 import mysql.connector
 import xml.etree.ElementTree as ET
 from mysql.connector import errorcode
-
+from configcon import conn
 # ***************loading Xml file*****************
-tree = ET.parse('books.xml')
+tree = ET.parse('new-books.xml')
 root = tree.getroot()
 
 # ***************table name*****************
-table_name = root.tag
+table_name = root[0].tag
 
 
 # **************attribute from XML
@@ -34,11 +34,12 @@ new_query += ")"
 
 new_query = new_query.format(*col)
 
+# *************************Getting Connection files****************
+
 
 # *********************connecting database************************
-db = mysql.connector.connect(
-    host="localhost", user="root", password="1234", database="catalog")
-
+db = conn()
+print(db)
 my_cursor = db.cursor()
 
 # ********************creating table********************************
@@ -54,17 +55,24 @@ else:
 
 
 # ******************geting the row values from xml*****************
+
+# ****************improvement*****************
+tree = ET.parse('new-books.xml')
+new_root = tree.getroot()
 list_of_value = []
 value_tuple = []
+col_new = col[1:]
+subelem_tag_index = []
+j = 0
 for elem in root:
-    value_tuple = []
-
-    for a in art_list:
-        value_tuple.append(str(elem.attrib[a]))
+    value_tuple = ["Null"]*len(col_new)
+    for i, a in enumerate(art_list):
+        value_tuple[i] = str(elem.attrib[a])
     for subelem in elem:
-        value_tuple.append(str(subelem.text))
-    list_of_value.append(tuple(value_tuple))
+        ind = col_new.index(subelem.tag)
+        value_tuple[ind] = str(subelem.text)
 
+    list_of_value.append(tuple(value_tuple))
 
 # *******************Making insert query*******************
 new_query = "INSERT INTO {0} ("
