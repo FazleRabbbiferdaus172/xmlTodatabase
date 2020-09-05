@@ -6,8 +6,11 @@ from configcon import conn
 # ***************XMl builder***************
 
 
-def E(tag, parent=None, content=None):
-    element = buildE(tag)
+def E(tag, parent=None, attr=None, value=None, content=None):
+    if attr is None:
+        element = buildE(tag)
+    else:
+        element = buildE(tag, value)
     if content is not None:
         element.text = content
     if parent is not None:
@@ -19,8 +22,12 @@ def fetchXML(db_name, tbl_name, fields, rows):
     #fields = [x[0] for x in cursor.description]
     doc = E(db_name)  # database name
     for record in rows:  # rows
-        r = E(tbl_name, parent=doc)  # table name
-        for (k, v) in zip(fields, record):  # cols,row
+        attr = str(fields[0])
+        value = str(record[0])
+        va = dict()
+        va[attr] = value
+        r = E(tbl_name, parent=doc, attr=attr, value=va)  # table name
+        for (k, v) in zip(fields[1:], record[1:]):  # cols,row
             E(k, content=v, parent=r)
     return doc
 
